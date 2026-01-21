@@ -3,10 +3,19 @@ import tempfile
 import shutil
 import os
 import re
+import sys
+import traceback
 import yt_dlp
 from flask import Flask, request, jsonify, render_template, send_from_directory, Response, stream_with_context, send_file, after_this_request
 
 app = Flask(__name__)
+
+# DEBUG: Check for ffmpeg on startup
+ffmpeg_path = shutil.which('ffmpeg')
+if ffmpeg_path:
+    print(f"Startup Check: FFmpeg found at: {ffmpeg_path}")
+else:
+    print("Startup Check: FFmpeg NOT FOUND on PATH! Downloads will likely fail.")
 
 def limpiar_nombre(nombre):
     """Eliminar caracteres inválidos del nombre de archivo"""
@@ -112,6 +121,8 @@ def api_descargar_audio_get():
         )
 
     except Exception as e:
+        app.logger.error(f"Error serving download: {e}")
+        app.logger.error(traceback.format_exc())
         # Limpiar si falla antes de enviar respuesta
         shutil.rmtree(temp_dir, ignore_errors=True)
         return jsonify({"message": str(e)}), 500
