@@ -21,6 +21,13 @@ def limpiar_nombre(nombre):
     """Eliminar caracteres inválidos del nombre de archivo"""
     return re.sub(r'[\\/*?:\"<>|]', "", nombre)
 
+# Configuration for stealth/browser simulation
+SHARED_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+}
+
 def descargar_video(url, carpeta="descargas"):
     os.makedirs(carpeta, exist_ok=True)
     
@@ -30,6 +37,10 @@ def descargar_video(url, carpeta="descargas"):
         'postprocessors': [],
         'nocheckcertificate': True,
         'cookiefile': 'cookies.txt',
+        'noplaylist': True,
+        'quiet': True,
+        'http_headers': SHARED_HEADERS,
+        'source_address': '0.0.0.0',
     }
 
     try:
@@ -55,6 +66,10 @@ def descargar_mp3(url, carpeta="descargas"):
 
         'nocheckcertificate': True,
         'cookiefile': 'cookies.txt',
+        'noplaylist': True,
+        'quiet': True,
+        'http_headers': SHARED_HEADERS,
+        'source_address': '0.0.0.0',
     }
 
     try:
@@ -90,6 +105,9 @@ def api_descargar_audio_get():
             'nocheckcertificate': True,
             'quiet': True,
             'cookiefile': 'cookies.txt',
+            'noplaylist': True,
+            'http_headers': SHARED_HEADERS,
+            'source_address': '0.0.0.0',
         }
 
         with yt_dlp.YoutubeDL(opciones_ydl) as ydl:
