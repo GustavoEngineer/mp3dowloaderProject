@@ -29,6 +29,7 @@ def descargar_video(url, carpeta="descargas"):
         'outtmpl': f'{carpeta}/%(title)s.%(ext)s',
         'postprocessors': [],
         'nocheckcertificate': True,
+        'cookiefile': 'cookies.txt',
     }
 
     try:
@@ -53,6 +54,7 @@ def descargar_mp3(url, carpeta="descargas"):
         }],
 
         'nocheckcertificate': True,
+        'cookiefile': 'cookies.txt',
     }
 
     try:
@@ -87,6 +89,7 @@ def api_descargar_audio_get():
             }],
             'nocheckcertificate': True,
             'quiet': True,
+            'cookiefile': 'cookies.txt',
         }
 
         with yt_dlp.YoutubeDL(opciones_ydl) as ydl:
