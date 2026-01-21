@@ -36,10 +36,51 @@
                 return;
             }
 
-            status.textContent = 'Descargando...';
+            status.textContent = 'Procesando descarga... Por favor espera.';
             status.style.color = 'orange';
 
-            const endpoint = tipo === 'video' ? '/descargar-video' : '/descargar-mp3';
+            if (tipo === 'mp3') {
+                try {
+                    // Usar GET para MP3
+                    const response = await fetch(`/download?url=${encodeURIComponent(url)}`);
+                    
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const downloadUrl = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        
+                        // Intentar obtener el nombre del archivo del header content-disposition
+                        const contentDisposition = response.headers.get('Content-Disposition');
+                        let fileName = 'audio.mp3';
+                        if (contentDisposition) {
+                            const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                            if (fileNameMatch && fileNameMatch.length === 2)
+                                fileName = fileNameMatch[1];
+                        }
+                        a.download = fileName;
+                        
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(downloadUrl);
+                        
+                        status.textContent = '¡Descarga iniciada!';
+                        status.style.color = 'green';
+                    } else {
+                        const errorData = await response.json();
+                        status.textContent = 'Error: ' + (errorData.message || 'Error desconocido');
+                        status.style.color = 'red';
+                    }
+                } catch (error) {
+                    status.textContent = 'Error de red: ' + error.message;
+                    status.style.color = 'red';
+                }
+                return; // Terminar ejecución para MP3
+            }
+
+            // Lógica original para Video (POST)
+            const endpoint = '/descargar-video';
 
             try {
                 const response = await fetch(endpoint, {

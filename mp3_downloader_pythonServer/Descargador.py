@@ -34,7 +34,6 @@ def descargar_mp3(url, carpeta="descargas"):
             'preferredcodec': 'mp3',
             'preferredquality': '320',
         }],
-        'ffmpeg_location': 'C:/ffmpeg/bin/ffmpeg.exe',  # ruta a FFmpeg
     }
 
     with yt_dlp.YoutubeDL(opciones) as ydl:

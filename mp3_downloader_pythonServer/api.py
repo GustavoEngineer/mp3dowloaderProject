@@ -1,8 +1,10 @@
 
+import tempfile
+import shutil
 import os
 import re
 import yt_dlp
-from flask import Flask, request, jsonify, render_template, send_from_directory, Response, stream_with_context
+from flask import Flask, request, jsonify, render_template, send_from_directory, Response, stream_with_context, send_file, after_this_request
 
 app = Flask(__name__)
 
@@ -40,7 +42,7 @@ def descargar_mp3(url, carpeta="descargas"):
             'preferredcodec': 'mp3',
             'preferredquality': '320',
         }],
-        'ffmpeg_location': 'C:/ffmpeg/bin/ffmpeg.exe',
+
         'nocheckcertificate': True,
     }
 
@@ -53,43 +55,65 @@ def descargar_mp3(url, carpeta="descargas"):
     except Exception as e:
         return {"estado": "error", "mensaje": str(e)}
 
+# ... (rest of helper functions if needed, but I'll redefine the relevant endpoint below)
+
 @app.route('/download', methods=['GET'])
 def api_descargar_audio_get():
-    """Endpoint para la app móvil que usa GET."""
+    """Endpoint para descargar MP3 directamente al navegador usando archivos temporales."""
     url = request.args.get('url')
     if not url:
         return jsonify({"message": "No se proporcionó URL."}), 400
 
+    # Crear directorio temporal único para esta descarga
+    temp_dir = tempfile.mkdtemp()
+
     try:
         opciones_ydl = {
             'format': 'bestaudio/best',
-            'outtmpl': '-',  # Salida estándar (stdout)
+            'outtmpl': f'{temp_dir}/%(title)s.%(ext)s',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-                'preferredquality': '320',
+                'preferredquality': '192',
             }],
-            'ffmpeg_location': 'C:/ffmpeg/bin/ffmpeg.exe',
             'nocheckcertificate': True,
             'quiet': True,
         }
 
         with yt_dlp.YoutubeDL(opciones_ydl) as ydl:
-            info = ydl.extract_info(url, download=False)
-            titulo_limpio = limpiar_nombre(info['title'])
+            info = ydl.extract_info(url, download=True)
+            titulo = limpiar_nombre(info['title'])
+            # El archivo final tendrá extensión .mp3
+            archivo_path = os.path.join(temp_dir, f"{titulo}.mp3")
 
-            @stream_with_context
-            def generate():
-                # Usamos un generador para transmitir la salida de yt-dlp directamente al cliente.
-                # download() con outtmpl='-' escribirá en stdout, que capturamos aquí.
-                with yt_dlp.YoutubeDL(opciones_ydl) as ydl_stream:
-                    # No necesitamos un generador anidado, podemos ceder directamente
-                    # desde el resultado de la descarga cuando se transmite.
-                    yield ydl_stream.download([url])
+        # Verificar si el archivo existe (a veces el título puede variar ligeramente)
+        if not os.path.exists(archivo_path):
+            # Intentar buscar cualquier archivo mp3 en el directorio temp
+            archivos = [f for f in os.listdir(temp_dir) if f.endswith('.mp3')]
+            if archivos:
+                archivo_path = os.path.join(temp_dir, archivos[0])
+                titulo = os.path.splitext(archivos[0])[0]
+            else:
+                raise Exception("No se pudo encontrar el archivo descargado.")
 
-            return Response(generate(), mimetype='audio/mpeg', headers={'Content-Disposition': f'attachment;filename="{titulo_limpio}.mp3"'})
+        @after_this_request
+        def remove_temp_dir(response):
+            try:
+                shutil.rmtree(temp_dir)
+            except Exception as e:
+                app.logger.error(f"Error eliminando directorio temporal: {e}")
+            return response
+
+        return send_file(
+            archivo_path, 
+            as_attachment=True, 
+            download_name=f"{titulo}.mp3", 
+            mimetype='audio/mpeg'
+        )
 
     except Exception as e:
+        # Limpiar si falla antes de enviar respuesta
+        shutil.rmtree(temp_dir, ignore_errors=True)
         return jsonify({"message": str(e)}), 500
 
 @app.route('/')
@@ -129,4 +153,5 @@ def api_descargar_mp3():
         return jsonify(resultado), 500
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
