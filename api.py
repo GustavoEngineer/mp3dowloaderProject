@@ -36,11 +36,9 @@ def descargar_video(url, carpeta="descargas"):
         'outtmpl': f'{carpeta}/%(title)s.%(ext)s',
         'postprocessors': [],
         'nocheckcertificate': True,
-        'cookiefile': 'cookies.txt',
         'noplaylist': True,
         'quiet': True,
         'http_headers': SHARED_HEADERS,
-        'source_address': '0.0.0.0',
     }
 
     try:
@@ -65,11 +63,9 @@ def descargar_mp3(url, carpeta="descargas"):
         }],
 
         'nocheckcertificate': True,
-        'cookiefile': 'cookies.txt',
         'noplaylist': True,
         'quiet': True,
         'http_headers': SHARED_HEADERS,
-        'source_address': '0.0.0.0',
     }
 
     try:
@@ -104,10 +100,8 @@ def api_descargar_audio_get():
             }],
             'nocheckcertificate': True,
             'quiet': True,
-            'cookiefile': 'cookies.txt',
             'noplaylist': True,
             'http_headers': SHARED_HEADERS,
-            'source_address': '0.0.0.0',
         }
 
         with yt_dlp.YoutubeDL(opciones_ydl) as ydl:
