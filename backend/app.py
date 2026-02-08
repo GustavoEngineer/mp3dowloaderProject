@@ -61,18 +61,32 @@ def get_cookie_file():
         response = requests.get(YOUTUBE_COOKIES_URL, timeout=10)
         response.raise_for_status()
         
+        cookie_content = response.text
+        
+        # Validar que el contenido sea un archivo de cookies en formato Netscape
+        if not cookie_content.strip().startswith('# Netscape HTTP Cookie File'):
+            print(f"{Fore.RED}❌ Error: El contenido descargado no es un archivo de cookies válido")
+            print(f"{Fore.YELLOW}⚠️  Asegúrate de usar la URL 'Raw' del Gist")
+            print(f"{Fore.YELLOW}⚠️  La URL debe empezar con: https://gist.githubusercontent.com/")
+            
+            # Mostrar primeras líneas para debug
+            first_lines = '\n'.join(cookie_content.split('\n')[:3])
+            print(f"{Fore.YELLOW}Contenido recibido (primeras líneas):\n{first_lines}")
+            return None
+        
         # Crear archivo temporal
         temp_cookie_file = Path(tempfile.gettempdir()) / 'youtube_cookies.txt'
-        temp_cookie_file.write_text(response.text)
+        temp_cookie_file.write_text(cookie_content)
         
         _cookies_cache = str(temp_cookie_file)
         _cookies_last_update = time.time()
         
-        print(f"{Fore.GREEN}✅ Cookies descargadas exitosamente ({len(response.text)} caracteres)")
+        print(f"{Fore.GREEN}✅ Cookies descargadas y validadas exitosamente ({len(cookie_content)} caracteres)")
         return _cookies_cache
         
     except requests.RequestException as e:
         print(f"{Fore.RED}⚠️  Error al descargar cookies desde URL: {e}")
+        print(f"{Fore.YELLOW}⚠️  Verifica que la URL sea correcta y accesible")
         return None
     except Exception as e:
         print(f"{Fore.RED}⚠️  Error al crear archivo temporal de cookies: {e}")
