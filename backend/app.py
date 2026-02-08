@@ -35,6 +35,10 @@ ADMIN_PASSWORD_HASH = os.getenv('ADMIN_PASSWORD_HASH', '')
 # Esto evita el límite de tamaño de variables de entorno
 YOUTUBE_COOKIES_URL = os.getenv('YOUTUBE_COOKIES_URL', '')
 
+# Proxy opcional para evitar bloqueo de IPs de datacenter
+# Formato: http://user:pass@host:port o socks5://user:pass@host:port
+PROXY_URL = os.getenv('PROXY_URL', '')
+
 # Cache de cookies en memoria
 _cookies_cache = None
 _cookies_last_update = None
@@ -180,6 +184,13 @@ class YouTubeMP3Downloader:
             'geo_bypass': True,
             'geo_bypass_country': 'US',
         }
+        
+        # Agregar proxy si está configurado
+        if PROXY_URL:
+            ydl_opts['proxy'] = PROXY_URL
+            # Mostrar solo primeros caracteres del proxy por seguridad
+            proxy_display = PROXY_URL.split('@')[-1] if '@' in PROXY_URL else PROXY_URL[:30]
+            print(f"{Fore.GREEN}🌐 Usando proxy: {proxy_display}")
         
         # Log si se están usando cookies
         if YOUTUBE_COOKIES_URL:
