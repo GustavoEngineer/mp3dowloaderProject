@@ -1,0 +1,37 @@
+# Ignorar archivos innecesarios en el build
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+
+# Archivos de desarrollo
+.git/
+.gitignore
+.vscode/
+.idea/
+*.log
+
+# Archivos temporales
+backend/downloads/
+*.mp3
+*.m4a
+*.webm
+
+# Archivos de configuración local
+.env
+.env.local
+
+# Archivos de Vercel (no necesarios para Fly.io)
+vercel.json
+.vercel/
+
+# Documentación de desarrollo
+backend/TECHNICAL_DOCS.md
