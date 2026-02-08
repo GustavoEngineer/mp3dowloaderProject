@@ -152,20 +152,28 @@ class YouTubeMP3Downloader:
             'extract_flat': False,
             # Usar cookies desde variable de entorno
             'cookiefile': get_cookie_file(),
-            # Opciones mejoradas para evitar errores 403 y bot detection
-            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            # ESTRATEGIA MEJORADA: Usar solo clientes móviles (más difícil de detectar)
+            'user_agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 13) gzip',
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android', 'ios', 'web', 'tv_embedded'],
+                    # CRÍTICO: Solo usar clientes móviles (Android e iOS)
+                    # Estos tienen menos restricciones que web
+                    'player_client': ['android', 'ios'],
+                    # Saltar verificaciones de página web
                     'player_skip': ['webpage', 'configs'],
+                    # No usar DASH/HLS (más simple = menos detección)
                     'skip': ['dash', 'hls'],
                 }
             },
             'http_headers': {
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-us,en;q=0.5',
+                # Headers de cliente Android
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9',
                 'Accept-Encoding': 'gzip, deflate',
-                'Sec-Fetch-Mode': 'navigate',
+                'X-YouTube-Client-Name': '3',  # Android
+                'X-YouTube-Client-Version': '19.09.37',
+                'Origin': 'https://www.youtube.com',
+                'Referer': 'https://www.youtube.com/',
             },
             'nocheckcertificate': True,
             'ignoreerrors': False,
