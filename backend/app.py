@@ -75,22 +75,28 @@ class YouTubeMP3Downloader:
             'quiet': True,
             'no_warnings': True,
             'extract_flat': False,
-            # Opciones para evitar errores 403
+            # Opciones mejoradas para evitar errores 403 y bot detection
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android', 'ios', 'web'],
+                    'player_client': ['android', 'ios', 'web', 'tv_embedded'],
                     'player_skip': ['webpage', 'configs'],
+                    'skip': ['dash', 'hls'],
                 }
             },
             'http_headers': {
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'en-us,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
                 'Sec-Fetch-Mode': 'navigate',
             },
             'nocheckcertificate': True,
             'ignoreerrors': False,
             'no_color': True,
+            # Opciones adicionales para evitar bot detection
+            'age_limit': None,
+            'geo_bypass': True,
+            'geo_bypass_country': 'US',
         }
         
         try:
