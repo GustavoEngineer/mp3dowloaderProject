@@ -159,10 +159,7 @@ class YouTubeMP3Downloader:
                     # CRÍTICO: Solo usar clientes móviles (Android e iOS)
                     # Estos tienen menos restricciones que web
                     'player_client': ['android', 'ios'],
-                    # Saltar verificaciones de página web
-                    'player_skip': ['webpage', 'configs'],
-                    # No usar DASH/HLS (más simple = menos detección)
-                    'skip': ['dash', 'hls'],
+                    # NO saltar configs - necesarios para extraer player response
                 }
             },
             'http_headers': {
