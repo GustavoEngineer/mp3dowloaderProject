@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - YouTube MP3 Downloader</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .admin-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .admin-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .login-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .cookie-status {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .status-active {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+        }
+        
+        .instructions {
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+        
+        .instructions ol {
+            margin: 0.5rem 0 0 1.5rem;
+            padding: 0;
+        }
+        
+        .instructions li {
+            margin: 0.5rem 0;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-gradient"></div>
+    
+    <div class="admin-container">
+        <!-- Login Section -->
+        <div id="loginSection" class="admin-card">
+            <h1 style="text-align: center; margin-bottom: 2rem;">🔐 Admin Login</h1>
+            <form id="loginForm" class="login-form">
+                <div class="input-group">
+                    <input type="password" id="adminPassword" placeholder="Contraseña de administrador" required>
+                    <button type="submit" class="btn-primary">
+                        <span class="btn-text">Iniciar Sesión</span>
+                    </button>
+                </div>
+                <div id="loginMessage" class="message" style="display: none;"></div>
+            </form>
+        </div>
+        
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="hidden">
+            <div class="admin-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h1>🍪 Gestión de Cookies</h1>
+                    <button id="logoutBtn" class="btn-primary" style="padding: 0.5rem 1rem;">Cerrar Sesión</button>
+                </div>
+                
+                <!-- Cookie Status -->
+                <div id="cookieStatus" class="cookie-status">
+                    <h3>Estado de Cookies</h3>
+                    <p id="statusText">Cargando...</p>
+                </div>
+                
+                <!-- Upload Section -->
+                <div class="admin-card" style="background: rgba(30, 41, 59, 0.5);">
+                    <h3>Subir Cookies</h3>
+                    <form id="uploadForm">
+                        <div class="upload-area" id="uploadArea">
+                            <input type="file" id="cookieFile" accept=".txt" style="display: none;">
+                            <p>📁 Arrastra tu archivo cookies.txt aquí</p>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">o haz clic para seleccionar</p>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">
+                            <span class="btn-text">Subir Cookies</span>
+                        </button>
+                    </form>
+                    <div id="uploadMessage" class="message" style="display: none; margin-top: 1rem;"></div>
+                </div>
+                
+                <!-- Delete Section -->
+                <div class="admin-card" style="background: rgba(30, 41, 59, 0.5);">
+                    <h3>Eliminar Cookies</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Elimina las cookies actuales si están causando problemas.</p>
+                    <button id="deleteBtn" class="btn-danger" style="width: 100%;">
+                        🗑️ Eliminar Cookies
+                    </button>
+                    <div id="deleteMessage" class="message" style="display: none; margin-top: 1rem;"></div>
+                </div>
+                
+                <!-- Instructions -->
+                <div class="instructions">
+                    <h3>📖 Cómo Exportar Cookies de YouTube</h3>
+                    <ol>
+                        <li><strong>Instala una extensión:</strong>
+                            <ul>
+                                <li>Chrome: "Get cookies.txt LOCALLY"</li>
+                                <li>Firefox: "cookies.txt"</li>
+                            </ul>
+                        </li>
+                        <li><strong>Inicia sesión en YouTube</strong> en tu navegador</li>
+                        <li><strong>Ve a youtube.com</strong> y haz clic en el ícono de la extensión</li>
+                        <li><strong>Exporta las cookies</strong> y guarda el archivo .txt</li>
+                        <li><strong>Sube el archivo</strong> usando el formulario de arriba</li>
+                    </ol>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">
+                        ⏰ Las cookies duran aproximadamente 1-2 semanas. Actualízalas cuando las descargas empiecen a fallar.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Check authentication on load
+        checkAuth();
+        
+        async function checkAuth() {
+            try {
+                const response = await fetch('/admin/check-auth');
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    showAdminPanel();
+                    loadCookieStatus();
+                }
+            } catch (error) {
+                console.error('Error checking auth:', error);
+            }
+        }
+        
+        // Login form
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const password = document.getElementById('adminPassword').value;
+            const messageDiv = document.getElementById('loginMessage');
+            
+            try {
+                const response = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAdminPanel();
+                    loadCookieStatus();
+                } else {
+                    showMessage(messageDiv, data.error, 'error');
+                }
+            } catch (error) {
+                showMessage(messageDiv, 'Error al iniciar sesión', 'error');
+            }
+        });
+        
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await fetch('/admin/logout', { method: 'POST' });
+                hideAdminPanel();
+            } catch (error) {
+                console.error('Error logging out:', error);
+            }
+        });
+        
+        // Upload area interactions
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('cookieFile');
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                uploadArea.querySelector('p').textContent = `📄 ${e.dataTransfer.files[0].name}`;
+            }
+        });
+        
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                uploadArea.querySelector('p').textContent = `📄 ${fileInput.files[0].name}`;
+            }
+        });
+        
+        // Upload form
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showMessage(document.getElementById('uploadMessage'), 'Por favor selecciona un archivo', 'error');
+                return;
+            }
+            
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/admin/upload-cookies', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(document.getElementById('uploadMessage'), data.message, 'success');
+                    loadCookieStatus();
+                    fileInput.value = '';
+                    uploadArea.querySelector('p').textContent = '📁 Arrastra tu archivo cookies.txt aquí';
+                } else {
+                    showMessage(document.getElementById('uploadMessage'), data.error, 'error');
+                }
+            } catch (error) {
+                showMessage(document.getElementById('uploadMessage'), 'Error al subir cookies', 'error');
+            }
+        });
+        
+        // Delete cookies
+        document.getElementById('deleteBtn').addEventListener('click', async () => {
+            if (!confirm('¿Estás seguro de que quieres eliminar las cookies?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/admin/delete-cookies', {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(document.getElementById('deleteMessage'), data.message, 'success');
+                    loadCookieStatus();
+                } else {
+                    showMessage(document.getElementById('deleteMessage'), data.error, 'error');
+                }
+            } catch (error) {
+                showMessage(document.getElementById('deleteMessage'), 'Error al eliminar cookies', 'error');
+            }
+        });
+        
+        // Load cookie status
+        async function loadCookieStatus() {
+            try {
+                const response = await fetch('/admin/cookie-status');
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('cookieStatus');
+                const statusText = document.getElementById('statusText');
+                
+                if (data.exists) {
+                    statusDiv.className = 'cookie-status status-active';
+                    const uploadDate = new Date(data.uploaded_at).toLocaleString('es-ES');
+                    statusText.innerHTML = `
+                        ✅ <strong>Cookies activas</strong><br>
+                        Subidas: ${uploadDate}<br>
+                        Tamaño: ${(data.size_bytes / 1024).toFixed(2)} KB
+                    `;
+                } else {
+                    statusDiv.className = 'cookie-status status-inactive';
+                    statusText.innerHTML = '❌ <strong>No hay cookies</strong><br>Por favor sube un archivo de cookies para habilitar las descargas.';
+                }
+            } catch (error) {
+                console.error('Error loading cookie status:', error);
+            }
+        }
+        
+        function showAdminPanel() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+        }
+        
+        function hideAdminPanel() {
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('adminPanel').classList.add('hidden');
+        }
+        
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `message ${type === 'error' ? 'error' : 'success'}`;
+            element.style.display = 'block';
+            
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

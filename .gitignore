@@ -48,3 +48,8 @@ fly.toml
 
 # Git
 .git/
+
+# Cookies (IMPORTANT: Never commit cookies!)
+youtube_cookies.txt
+cookies.txt
+*_cookies.txt

@@ -6,8 +6,11 @@ Servidor Flask para descargar videos de YouTube como MP3 desde el navegador
 
 import os
 import re
+import hashlib
 from pathlib import Path
-from flask import Flask, render_template, request, send_file, jsonify
+from datetime import datetime
+from flask import Flask, render_template, request, send_file, jsonify, session, redirect, url_for
+from werkzeug.utils import secure_filename
 import yt_dlp
 from colorama import init, Fore, Style
 import tempfile
@@ -20,6 +23,15 @@ init(autoreset=True)
 app = Flask(__name__, 
             static_folder='static', 
             template_folder='templates')
+
+# Configuración de sesión
+app.secret_key = os.getenv('SECRET_KEY', os.urandom(24))
+
+# Configuración de admin
+ADMIN_PASSWORD_HASH = os.getenv('ADMIN_PASSWORD_HASH', '')
+
+# Ruta del archivo de cookies
+COOKIE_FILE = Path(__file__).parent / 'youtube_cookies.txt'
 
 class YouTubeMP3Downloader:
     def __init__(self):
@@ -75,6 +87,8 @@ class YouTubeMP3Downloader:
             'quiet': True,
             'no_warnings': True,
             'extract_flat': False,
+            # Usar cookies si existen
+            'cookiefile': str(COOKIE_FILE) if COOKIE_FILE.exists() else None,
             # Opciones mejoradas para evitar errores 403 y bot detection
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'extractor_args': {
@@ -98,6 +112,10 @@ class YouTubeMP3Downloader:
             'geo_bypass': True,
             'geo_bypass_country': 'US',
         }
+        
+        # Log si se están usando cookies
+        if COOKIE_FILE.exists():
+            print(f"{Fore.GREEN}🍪 Usando cookies de YouTube")
         
         try:
             print(f"{Fore.CYAN}📥 Descargando: {url}")
@@ -202,6 +220,141 @@ def download():
 def health():
     """Endpoint de salud del servidor"""
     return jsonify({'status': 'ok', 'message': 'Server is running'})
+
+
+# ==================== ADMIN ENDPOINTS ====================
+
+def check_admin_auth(password):
+    """Verifica si la contraseña de admin es correcta"""
+    if not ADMIN_PASSWORD_HASH:
+        # Si no hay hash configurado, generar uno temporal para desarrollo
+        # En producción, DEBE estar configurado en variables de entorno
+        return password == 'admin123'  # Password por defecto solo para desarrollo
+    
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    return password_hash == ADMIN_PASSWORD_HASH
+
+
+def require_admin():
+    """Decorador para requerir autenticación de admin"""
+    if not session.get('admin_authenticated'):
+        return False
+    return True
+
+
+@app.route('/admin')
+def admin():
+    """Página de administración"""
+    return render_template('admin.html')
+
+
+@app.route('/admin/login', methods=['POST'])
+def admin_login():
+    """Endpoint para login de admin"""
+    try:
+        data = request.get_json()
+        password = data.get('password', '')
+        
+        if check_admin_auth(password):
+            session['admin_authenticated'] = True
+            return jsonify({'success': True, 'message': 'Autenticación exitosa'})
+        else:
+            return jsonify({'success': False, 'error': 'Contraseña incorrecta'}), 401
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/admin/logout', methods=['POST'])
+def admin_logout():
+    """Endpoint para logout de admin"""
+    session.pop('admin_authenticated', None)
+    return jsonify({'success': True, 'message': 'Sesión cerrada'})
+
+
+@app.route('/admin/check-auth', methods=['GET'])
+def admin_check_auth():
+    """Verifica si el usuario está autenticado"""
+    is_auth = session.get('admin_authenticated', False)
+    return jsonify({'authenticated': is_auth})
+
+
+@app.route('/admin/upload-cookies', methods=['POST'])
+def upload_cookies():
+    """Endpoint para subir archivo de cookies"""
+    if not require_admin():
+        return jsonify({'success': False, 'error': 'No autenticado'}), 401
+    
+    try:
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'error': 'No se envió ningún archivo'}), 400
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'Nombre de archivo vacío'}), 400
+        
+        if not file.filename.endswith('.txt'):
+            return jsonify({'success': False, 'error': 'El archivo debe ser .txt'}), 400
+        
+        # Guardar el archivo de cookies
+        file.save(COOKIE_FILE)
+        
+        print(f"{Fore.GREEN}✅ Cookies actualizadas exitosamente")
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Cookies subidas exitosamente',
+            'uploaded_at': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        print(f"{Fore.RED}❌ Error al subir cookies: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/admin/cookie-status', methods=['GET'])
+def cookie_status():
+    """Endpoint para verificar el estado de las cookies"""
+    if not require_admin():
+        return jsonify({'success': False, 'error': 'No autenticado'}), 401
+    
+    try:
+        if COOKIE_FILE.exists():
+            stat = COOKIE_FILE.stat()
+            return jsonify({
+                'success': True,
+                'exists': True,
+                'uploaded_at': datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                'size_bytes': stat.st_size
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'exists': False
+            })
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/admin/delete-cookies', methods=['DELETE'])
+def delete_cookies():
+    """Endpoint para eliminar las cookies"""
+    if not require_admin():
+        return jsonify({'success': False, 'error': 'No autenticado'}), 401
+    
+    try:
+        if COOKIE_FILE.exists():
+            COOKIE_FILE.unlink()
+            print(f"{Fore.YELLOW}🗑️  Cookies eliminadas")
+            return jsonify({'success': True, 'message': 'Cookies eliminadas exitosamente'})
+        else:
+            return jsonify({'success': False, 'error': 'No hay cookies para eliminar'}), 404
+            
+    except Exception as e:
+        print(f"{Fore.RED}❌ Error al eliminar cookies: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 def main():
