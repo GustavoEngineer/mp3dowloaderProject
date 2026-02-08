@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +12,7 @@
             margin: 0 auto;
             padding: 2rem;
         }
-        
+
         .admin-card {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
@@ -20,28 +21,28 @@
             margin-bottom: 2rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
         .login-form {
             max-width: 400px;
             margin: 0 auto;
         }
-        
+
         .cookie-status {
             padding: 1rem;
             border-radius: 10px;
             margin-bottom: 1rem;
         }
-        
+
         .status-active {
             background: rgba(16, 185, 129, 0.1);
             border: 1px solid rgba(16, 185, 129, 0.3);
         }
-        
+
         .status-inactive {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.3);
         }
-        
+
         .upload-area {
             border: 2px dashed rgba(255, 255, 255, 0.2);
             border-radius: 10px;
@@ -50,26 +51,26 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        
+
         .upload-area:hover {
             border-color: var(--primary);
             background: rgba(99, 102, 241, 0.05);
         }
-        
+
         .upload-area.dragover {
             border-color: var(--primary);
             background: rgba(99, 102, 241, 0.1);
         }
-        
+
         .btn-danger {
             background: linear-gradient(135deg, #ef4444, #dc2626);
         }
-        
+
         .btn-danger:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
         }
-        
+
         .instructions {
             background: rgba(99, 102, 241, 0.1);
             border-left: 4px solid var(--primary);
@@ -77,24 +78,25 @@
             border-radius: 5px;
             margin-top: 1rem;
         }
-        
+
         .instructions ol {
             margin: 0.5rem 0 0 1.5rem;
             padding: 0;
         }
-        
+
         .instructions li {
             margin: 0.5rem 0;
         }
-        
+
         .hidden {
             display: none;
         }
     </style>
 </head>
+
 <body>
     <div class="background-gradient"></div>
-    
+
     <div class="admin-container">
         <!-- Login Section -->
         <div id="loginSection" class="admin-card">
@@ -109,7 +111,7 @@
                 <div id="loginMessage" class="message" style="display: none;"></div>
             </form>
         </div>
-        
+
         <!-- Admin Panel -->
         <div id="adminPanel" class="hidden">
             <div class="admin-card">
@@ -117,13 +119,13 @@
                     <h1>🍪 Gestión de Cookies</h1>
                     <button id="logoutBtn" class="btn-primary" style="padding: 0.5rem 1rem;">Cerrar Sesión</button>
                 </div>
-                
+
                 <!-- Cookie Status -->
                 <div id="cookieStatus" class="cookie-status">
                     <h3>Estado de Cookies</h3>
                     <p id="statusText">Cargando...</p>
                 </div>
-                
+
                 <!-- Upload Section -->
                 <div class="admin-card" style="background: rgba(30, 41, 59, 0.5);">
                     <h3>Subir Cookies</h3>
@@ -139,17 +141,18 @@
                     </form>
                     <div id="uploadMessage" class="message" style="display: none; margin-top: 1rem;"></div>
                 </div>
-                
+
                 <!-- Delete Section -->
                 <div class="admin-card" style="background: rgba(30, 41, 59, 0.5);">
                     <h3>Eliminar Cookies</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Elimina las cookies actuales si están causando problemas.</p>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Elimina las cookies actuales si están
+                        causando problemas.</p>
                     <button id="deleteBtn" class="btn-danger" style="width: 100%;">
                         🗑️ Eliminar Cookies
                     </button>
                     <div id="deleteMessage" class="message" style="display: none; margin-top: 1rem;"></div>
                 </div>
-                
+
                 <!-- Instructions -->
                 <div class="instructions">
                     <h3>📖 Cómo Exportar Cookies de YouTube</h3>
@@ -166,22 +169,23 @@
                         <li><strong>Sube el archivo</strong> usando el formulario de arriba</li>
                     </ol>
                     <p style="margin-top: 1rem; color: var(--text-secondary);">
-                        ⏰ Las cookies duran aproximadamente 1-2 semanas. Actualízalas cuando las descargas empiecen a fallar.
+                        ⏰ Las cookies duran aproximadamente 1-2 semanas. Actualízalas cuando las descargas empiecen a
+                        fallar.
                     </p>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <script>
         // Check authentication on load
         checkAuth();
-        
+
         async function checkAuth() {
             try {
                 const response = await fetch('/admin/check-auth');
                 const data = await response.json();
-                
+
                 if (data.authenticated) {
                     showAdminPanel();
                     loadCookieStatus();
@@ -190,23 +194,23 @@
                 console.error('Error checking auth:', error);
             }
         }
-        
+
         // Login form
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const password = document.getElementById('adminPassword').value;
             const messageDiv = document.getElementById('loginMessage');
-            
+
             try {
                 const response = await fetch('/admin/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     showAdminPanel();
                     loadCookieStatus();
@@ -217,7 +221,7 @@
                 showMessage(messageDiv, 'Error al iniciar sesión', 'error');
             }
         });
-        
+
         // Logout
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             try {
@@ -227,63 +231,63 @@
                 console.error('Error logging out:', error);
             }
         });
-        
+
         // Upload area interactions
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('cookieFile');
-        
+
         uploadArea.addEventListener('click', () => fileInput.click());
-        
+
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.classList.add('dragover');
         });
-        
+
         uploadArea.addEventListener('dragleave', () => {
             uploadArea.classList.remove('dragover');
         });
-        
+
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.classList.remove('dragover');
-            
+
             if (e.dataTransfer.files.length > 0) {
                 fileInput.files = e.dataTransfer.files;
                 uploadArea.querySelector('p').textContent = `📄 ${e.dataTransfer.files[0].name}`;
             }
         });
-        
+
         fileInput.addEventListener('change', () => {
             if (fileInput.files.length > 0) {
                 uploadArea.querySelector('p').textContent = `📄 ${fileInput.files[0].name}`;
             }
         });
-        
+
         // Upload form
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const formData = new FormData();
             const file = fileInput.files[0];
-            
+
             if (!file) {
                 showMessage(document.getElementById('uploadMessage'), 'Por favor selecciona un archivo', 'error');
                 return;
             }
-            
+
             formData.append('file', file);
-            
+
             try {
                 const response = await fetch('/admin/upload-cookies', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
-                    showMessage(document.getElementById('uploadMessage'), data.message, 'success');
-                    loadCookieStatus();
+                    // Show instructions modal with cookie content
+                    showCookieInstructions(data.cookie_content, data.instructions);
                     fileInput.value = '';
                     uploadArea.querySelector('p').textContent = '📁 Arrastra tu archivo cookies.txt aquí';
                 } else {
@@ -293,20 +297,20 @@
                 showMessage(document.getElementById('uploadMessage'), 'Error al subir cookies', 'error');
             }
         });
-        
+
         // Delete cookies
         document.getElementById('deleteBtn').addEventListener('click', async () => {
             if (!confirm('¿Estás seguro de que quieres eliminar las cookies?')) {
                 return;
             }
-            
+
             try {
                 const response = await fetch('/admin/delete-cookies', {
                     method: 'DELETE'
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     showMessage(document.getElementById('deleteMessage'), data.message, 'success');
                     loadCookieStatus();
@@ -317,16 +321,16 @@
                 showMessage(document.getElementById('deleteMessage'), 'Error al eliminar cookies', 'error');
             }
         });
-        
+
         // Load cookie status
         async function loadCookieStatus() {
             try {
                 const response = await fetch('/admin/cookie-status');
                 const data = await response.json();
-                
+
                 const statusDiv = document.getElementById('cookieStatus');
                 const statusText = document.getElementById('statusText');
-                
+
                 if (data.exists) {
                     statusDiv.className = 'cookie-status status-active';
                     const uploadDate = new Date(data.uploaded_at).toLocaleString('es-ES');
@@ -343,26 +347,141 @@
                 console.error('Error loading cookie status:', error);
             }
         }
-        
+
         function showAdminPanel() {
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
         }
-        
+
         function hideAdminPanel() {
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('adminPanel').classList.add('hidden');
         }
-        
+
+
         function showMessage(element, message, type) {
             element.textContent = message;
             element.className = `message ${type === 'error' ? 'error' : 'success'}`;
             element.style.display = 'block';
-            
+
             setTimeout(() => {
                 element.style.display = 'none';
             }, 5000);
         }
+
+        function showCookieInstructions(cookieContent, instructions) {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                padding: 2rem;
+            `;
+
+            // Create modal content
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                border-radius: 20px;
+                padding: 2rem;
+                max-width: 800px;
+                width: 100%;
+                max-height: 90vh;
+                overflow-y: auto;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            `;
+
+            modalContent.innerHTML = `
+                <h2 style="color: #10b981; margin-bottom: 1rem;">✅ Cookies Procesadas</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                    Ahora necesitas agregar estas cookies como variable de entorno en Leapcell:
+                </p>
+                
+                <div style="background: rgba(0, 0, 0, 0.3); border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <h3 style="color: var(--primary); margin-bottom: 0.5rem;">📋 Pasos a Seguir:</h3>
+                    <ol style="margin: 0.5rem 0 0 1.5rem; color: var(--text-primary);">
+                        ${instructions.map(inst => `<li style="margin: 0.5rem 0;">${inst}</li>`).join('')}
+                    </ol>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <h3 style="color: var(--primary); margin: 0;">🍪 Contenido de Cookies:</h3>
+                        <button id="copyCookiesBtn" style="
+                            background: linear-gradient(135deg, #10b981, #059669);
+                            color: white;
+                            border: none;
+                            padding: 0.5rem 1rem;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: 600;
+                        ">
+                            📋 Copiar
+                        </button>
+                    </div>
+                    <textarea id="cookieContentArea" readonly style="
+                        width: 100%;
+                        height: 200px;
+                        background: rgba(0, 0, 0, 0.5);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border-radius: 8px;
+                        padding: 1rem;
+                        color: var(--text-primary);
+                        font-family: monospace;
+                        font-size: 0.85rem;
+                        resize: vertical;
+                    ">${cookieContent}</textarea>
+                </div>
+                
+                <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 1rem; border-radius: 5px; margin-bottom: 1.5rem;">
+                    <p style="margin: 0; color: var(--text-primary);">
+                        ⚠️ <strong>IMPORTANTE:</strong> Después de agregar la variable de entorno en Leapcell, 
+                        debes hacer <strong>Redeploy</strong> de la aplicación para que los cambios surtan efecto.
+                    </p>
+                </div>
+                
+                <button id="closeModalBtn" class="btn-primary" style="width: 100%;">
+                    Entendido
+                </button>
+            `;
+
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+
+            // Copy button functionality
+            document.getElementById('copyCookiesBtn').addEventListener('click', () => {
+                const textarea = document.getElementById('cookieContentArea');
+                textarea.select();
+                document.execCommand('copy');
+
+                const btn = document.getElementById('copyCookiesBtn');
+                btn.textContent = '✅ Copiado!';
+                setTimeout(() => {
+                    btn.textContent = '📋 Copiar';
+                }, 2000);
+            });
+
+            // Close modal
+            document.getElementById('closeModalBtn').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+
+            // Close on overlay click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+        }
     </script>
 </body>
+
 </html>
