@@ -402,15 +402,8 @@
             modalContent.innerHTML = `
                 <h2 style="color: #10b981; margin-bottom: 1rem;">✅ Cookies Procesadas</h2>
                 <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                    Ahora necesitas agregar estas cookies como variable de entorno en Leapcell:
+                    Ahora crea un <strong>GitHub Gist</strong> para almacenar estas cookies de forma segura:
                 </p>
-                
-                <div style="background: rgba(0, 0, 0, 0.3); border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem;">
-                    <h3 style="color: var(--primary); margin-bottom: 0.5rem;">📋 Pasos a Seguir:</h3>
-                    <ol style="margin: 0.5rem 0 0 1.5rem; color: var(--text-primary);">
-                        ${instructions.map(inst => `<li style="margin: 0.5rem 0;">${inst}</li>`).join('')}
-                    </ol>
-                </div>
                 
                 <div style="margin-bottom: 1.5rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
@@ -429,7 +422,7 @@
                     </div>
                     <textarea id="cookieContentArea" readonly style="
                         width: 100%;
-                        height: 200px;
+                        height: 150px;
                         background: rgba(0, 0, 0, 0.5);
                         border: 1px solid rgba(255, 255, 255, 0.1);
                         border-radius: 8px;
@@ -441,16 +434,28 @@
                     ">${cookieContent}</textarea>
                 </div>
                 
-                <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 1rem; border-radius: 5px; margin-bottom: 1.5rem;">
-                    <p style="margin: 0; color: var(--text-primary);">
-                        ⚠️ <strong>IMPORTANTE:</strong> Después de agregar la variable de entorno en Leapcell, 
-                        debes hacer <strong>Redeploy</strong> de la aplicación para que los cambios surtan efecto.
-                    </p>
+                <div style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid var(--primary); padding: 1rem; border-radius: 5px; margin-bottom: 1.5rem;">
+                    <h3 style="color: var(--primary); margin-bottom: 0.5rem;">📋 Pasos a Seguir:</h3>
+                    <ol style="margin: 0.5rem 0 0 1.5rem; color: var(--text-primary); font-size: 0.95rem;">
+                        ${instructions.map(inst => `<li style="margin: 0.5rem 0;">${inst}</li>`).join('')}
+                    </ol>
                 </div>
                 
-                <button id="closeModalBtn" class="btn-primary" style="width: 100%;">
-                    Entendido
-                </button>
+                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                    <button id="openGistBtn" class="btn-primary" style="flex: 1; background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                        🚀 Abrir GitHub Gist
+                    </button>
+                    <button id="closeModalBtn" class="btn-primary" style="flex: 1; background: linear-gradient(135deg, #64748b, #475569);">
+                        Cerrar
+                    </button>
+                </div>
+                
+                <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 1rem; border-radius: 5px;">
+                    <p style="margin: 0; color: var(--text-primary); font-size: 0.9rem;">
+                        ⚠️ <strong>IMPORTANTE:</strong> Después de agregar YOUTUBE_COOKIES_URL en Leapcell, 
+                        debes hacer <strong>Redeploy</strong> de la aplicación.
+                    </p>
+                </div>
             `;
 
             modal.appendChild(modalContent);
@@ -467,6 +472,11 @@
                 setTimeout(() => {
                     btn.textContent = '📋 Copiar';
                 }, 2000);
+            });
+
+            // Open GitHub Gist button
+            document.getElementById('openGistBtn').addEventListener('click', () => {
+                window.open('https://gist.github.com', '_blank');
             });
 
             // Close modal

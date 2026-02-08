@@ -7,6 +7,7 @@ Servidor Flask para descargar videos de YouTube como MP3 desde el navegador
 import os
 import re
 import hashlib
+import requests
 from pathlib import Path
 from datetime import datetime
 from flask import Flask, render_template, request, send_file, jsonify, session, redirect, url_for
@@ -30,21 +31,49 @@ app.secret_key = os.getenv('SECRET_KEY', os.urandom(24))
 # Configuración de admin
 ADMIN_PASSWORD_HASH = os.getenv('ADMIN_PASSWORD_HASH', '')
 
-# Cookie storage - usar variable de entorno en lugar de archivo
-# Esto es necesario porque Leapcell tiene un sistema de archivos de solo lectura
-YOUTUBE_COOKIES = os.getenv('YOUTUBE_COOKIES', '')
+# Cookie storage - usar URL externa (GitHub Gist, Pastebin, etc.)
+# Esto evita el límite de tamaño de variables de entorno
+YOUTUBE_COOKIES_URL = os.getenv('YOUTUBE_COOKIES_URL', '')
 
-# Crear archivo temporal de cookies si existe la variable de entorno
+# Cache de cookies en memoria
+_cookies_cache = None
+_cookies_last_update = None
+
+# Crear archivo temporal de cookies descargándolas desde URL
 def get_cookie_file():
-    """Crea un archivo temporal de cookies desde la variable de entorno"""
-    if not YOUTUBE_COOKIES:
+    """Descarga cookies desde URL externa y las guarda en archivo temporal"""
+    global _cookies_cache, _cookies_last_update
+    
+    if not YOUTUBE_COOKIES_URL:
+        print(f"{Fore.YELLOW}⚠️  No hay URL de cookies configurada")
         return None
     
     try:
+        # Verificar si ya tenemos cookies en cache (válidas por 1 hora)
+        if _cookies_cache and _cookies_last_update:
+            elapsed = time.time() - _cookies_last_update
+            if elapsed < 3600:  # 1 hora
+                return _cookies_cache
+        
+        print(f"{Fore.CYAN}📥 Descargando cookies desde URL...")
+        
+        # Descargar cookies desde URL
+        response = requests.get(YOUTUBE_COOKIES_URL, timeout=10)
+        response.raise_for_status()
+        
         # Crear archivo temporal
         temp_cookie_file = Path(tempfile.gettempdir()) / 'youtube_cookies.txt'
-        temp_cookie_file.write_text(YOUTUBE_COOKIES)
-        return str(temp_cookie_file)
+        temp_cookie_file.write_text(response.text)
+        
+        _cookies_cache = str(temp_cookie_file)
+        _cookies_last_update = time.time()
+        
+        print(f"{Fore.GREEN}✅ Cookies descargadas exitosamente ({len(response.text)} caracteres)")
+        return _cookies_cache
+        
+    except requests.RequestException as e:
+        print(f"{Fore.RED}⚠️  Error al descargar cookies desde URL: {e}")
+        return None
     except Exception as e:
         print(f"{Fore.RED}⚠️  Error al crear archivo temporal de cookies: {e}")
         return None
@@ -318,17 +347,24 @@ def upload_cookies():
         
         print(f"{Fore.GREEN}✅ Cookies recibidas ({len(cookie_content)} caracteres)")
         
-        # En Leapcell, necesitas agregar esto como variable de entorno
+        # Proporcionar instrucciones para crear GitHub Gist
         return jsonify({
             'success': True, 
-            'message': 'Cookies procesadas. IMPORTANTE: Copia el contenido de abajo y agrégalo como variable de entorno YOUTUBE_COOKIES en Leapcell',
+            'message': 'Cookies procesadas. Ahora crea un GitHub Gist con este contenido',
             'cookie_content': cookie_content,
             'instructions': [
-                '1. Copia todo el contenido de cookie_content',
-                '2. Ve a Leapcell Dashboard → Settings → Environment Variables',
-                '3. Agrega: YOUTUBE_COOKIES = <contenido copiado>',
-                '4. Guarda y Redeploy'
-            ]
+                '1. Ve a https://gist.github.com',
+                '2. Pega el contenido de las cookies en el editor',
+                '3. Nombre del archivo: youtube_cookies.txt',
+                '4. Selecciona "Create secret gist" (privado)',
+                '5. Click en "Create secret gist"',
+                '6. Click en el botón "Raw" en tu Gist',
+                '7. Copia la URL completa (debe empezar con https://gist.githubusercontent.com/...)',
+                '8. Ve a Leapcell → Settings → Environment Variables',
+                '9. Agrega: YOUTUBE_COOKIES_URL = <URL copiada>',
+                '10. Guarda y Redeploy'
+            ],
+            'gist_url': 'https://gist.github.com'
         })
         
     except Exception as e:
@@ -343,19 +379,34 @@ def cookie_status():
         return jsonify({'success': False, 'error': 'No autenticado'}), 401
     
     try:
-        if YOUTUBE_COOKIES:
-            return jsonify({
-                'success': True,
-                'exists': True,
-                'source': 'environment_variable',
-                'size_bytes': len(YOUTUBE_COOKIES),
-                'message': 'Cookies configuradas en variable de entorno'
-            })
+        if YOUTUBE_COOKIES_URL:
+            # Intentar descargar cookies para verificar que la URL funciona
+            try:
+                response = requests.get(YOUTUBE_COOKIES_URL, timeout=10)
+                response.raise_for_status()
+                
+                return jsonify({
+                    'success': True,
+                    'exists': True,
+                    'source': 'external_url',
+                    'url': YOUTUBE_COOKIES_URL[:50] + '...' if len(YOUTUBE_COOKIES_URL) > 50 else YOUTUBE_COOKIES_URL,
+                    'size_bytes': len(response.text),
+                    'message': 'Cookies configuradas y accesibles desde URL externa'
+                })
+            except requests.RequestException as e:
+                return jsonify({
+                    'success': True,
+                    'exists': True,
+                    'source': 'external_url',
+                    'url': YOUTUBE_COOKIES_URL[:50] + '...' if len(YOUTUBE_COOKIES_URL) > 50 else YOUTUBE_COOKIES_URL,
+                    'error': f'URL configurada pero no accesible: {str(e)}',
+                    'message': 'Verifica que la URL del Gist sea correcta y pública (raw)'
+                })
         else:
             return jsonify({
                 'success': True,
                 'exists': False,
-                'message': 'No hay cookies configuradas. Agrega YOUTUBE_COOKIES como variable de entorno en Leapcell'
+                'message': 'No hay cookies configuradas. Agrega YOUTUBE_COOKIES_URL como variable de entorno en Leapcell'
             })
             
     except Exception as e:
@@ -370,7 +421,7 @@ def delete_cookies():
     
     return jsonify({
         'success': False, 
-        'error': 'Las cookies están en una variable de entorno. Para eliminarlas, ve a Leapcell Dashboard → Settings → Environment Variables y elimina YOUTUBE_COOKIES'
+        'error': 'Las cookies están en una URL externa (GitHub Gist). Para eliminarlas:\n1. Ve a Leapcell Dashboard → Settings → Environment Variables\n2. Elimina la variable YOUTUBE_COOKIES_URL\n3. Opcionalmente, elimina el Gist en GitHub'
     }), 400
 
 
