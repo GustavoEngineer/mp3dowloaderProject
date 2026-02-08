@@ -159,7 +159,7 @@ class YouTubeMP3Downloader:
         }
         
         # Log si se están usando cookies
-        if YOUTUBE_COOKIES:
+        if YOUTUBE_COOKIES_URL:
             print(f"{Fore.GREEN}🍪 Usando cookies de YouTube")
         
         try:
