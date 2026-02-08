@@ -1,325 +1,362 @@
-# 🚀 Guía de Deployment en Fly.io
+# 🚀 Guía de Deployment en Leapcell
 
-## 📋 Requisitos Previos
+## 📋 Descripción
 
-1. **Cuenta en Fly.io**
-   - Regístrate en [fly.io](https://fly.io/app/sign-up)
-   - Es gratis para empezar (incluye recursos gratuitos)
-
-2. **Instalar Fly CLI**
-   
-   **Windows (PowerShell):**
-   ```powershell
-   pwsh -Command "iwr https://fly.io/install.ps1 -useb | iex"
-   ```
-   
-   **macOS/Linux:**
-   ```bash
-   curl -L https://fly.io/install.sh | sh
-   ```
-
-3. **Verificar instalación:**
-   ```bash
-   flyctl version
-   ```
+Leapcell es una plataforma de deployment moderna que soporta aplicaciones Python/Flask directamente desde GitHub. **No requiere tarjeta de crédito** y ofrece un plan gratuito generoso.
 
 ---
 
-## 🔐 Paso 1: Autenticación
+## ✅ Ventajas de Leapcell
 
-```bash
-flyctl auth login
-```
-
-Esto abrirá tu navegador para iniciar sesión.
+- ✅ **Sin tarjeta de crédito** requerida
+- ✅ **Deployment automático** desde GitHub
+- ✅ **Soporta Docker** (FFmpeg funcionará)
+- ✅ **Plan gratuito** generoso
+- ✅ **HTTPS automático**
+- ✅ **Fácil configuración**
 
 ---
 
-## 🎯 Paso 2: Preparar el Proyecto
+## 📦 Requisitos Previos
 
-### Estructura Actual
+1. **Cuenta en GitHub**
+   - Tu código debe estar en un repositorio de GitHub
+
+2. **Cuenta en Leapcell**
+   - Regístrate en [leapcell.io](https://leapcell.io)
+
+---
+
+## 🔧 Paso 1: Preparar el Repositorio de GitHub
+
+### 1.1 Inicializar Git (si no lo has hecho)
+
+```powershell
+# Desde c:\Room\ItsMe\mp3dowloaderProject
+git init
+git add .
+git commit -m "Initial commit - YouTube to MP3 Downloader"
 ```
-mp3Project/
+
+### 1.2 Crear Repositorio en GitHub
+
+1. Ve a [github.com](https://github.com) y crea un nuevo repositorio
+2. Nómbralo: `youtube-mp3-downloader` (o el nombre que prefieras)
+3. **NO inicialices** con README, .gitignore, o licencia
+
+### 1.3 Conectar y Subir el Código
+
+```powershell
+# Reemplaza 'tu-usuario' con tu nombre de usuario de GitHub
+git remote add origin https://github.com/tu-usuario/youtube-mp3-downloader.git
+git branch -M main
+git push -u origin main
+```
+
+---
+
+## 🌐 Paso 2: Configurar Leapcell
+
+### 2.1 Crear Cuenta en Leapcell
+
+1. Ve a [leapcell.io](https://leapcell.io)
+2. Haz clic en **"Sign Up"** o **"Get Started"**
+3. Regístrate con GitHub (recomendado) o email
+
+### 2.2 Conectar GitHub
+
+1. En el dashboard de Leapcell, haz clic en **"New Project"**
+2. Selecciona **"Import from GitHub"**
+3. Autoriza a Leapcell para acceder a tus repositorios
+4. Selecciona el repositorio `youtube-mp3-downloader`
+
+### 2.3 Configurar el Proyecto
+
+Leapcell detectará automáticamente que es una aplicación Python. Configura:
+
+**Build Settings:**
+- **Framework**: `Docker` (selecciona esta opción)
+- **Dockerfile Path**: `Dockerfile` (ya lo tienes)
+- **Build Command**: (déjalo vacío, Docker lo maneja)
+
+**Environment Variables:**
+- **PORT**: `8080` (ya está en el Dockerfile)
+
+**Deploy Settings:**
+- **Branch**: `main`
+- **Auto Deploy**: ✅ Activado (para deployments automáticos)
+
+---
+
+## 📝 Paso 3: Verificar Archivos del Proyecto
+
+Asegúrate de que tu repositorio tenga estos archivos:
+
+```
+mp3dowloaderProject/
 ├── backend/
 │   ├── app.py
 │   ├── templates/
-│   ├── static/
-│   └── ...
-├── Dockerfile
-├── fly.toml
-├── .dockerignore
-└── requirements.txt
+│   │   └── index.html
+│   └── static/
+│       └── style.css
+├── Dockerfile          ✅ Ya existe
+├── requirements.txt    ✅ Ya existe
+├── .dockerignore       ✅ Ya existe
+└── .gitignore          ⚠️ Crear si no existe
 ```
 
-### Verificar archivos creados:
-- ✅ `Dockerfile` - Configuración de Docker con FFmpeg
-- ✅ `fly.toml` - Configuración de Fly.io
-- ✅ `.dockerignore` - Archivos a ignorar en el build
-- ✅ `requirements.txt` - Dependencias Python
+### Crear `.gitignore` (si no existe)
+
+```gitignore
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Flask
+instance/
+.webassets-cache
+
+# Archivos temporales
+backend/downloads/
+*.mp3
+*.m4a
+*.webm
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Deployment
+fly.toml
+DEPLOYMENT.md
+```
 
 ---
 
-## 🚀 Paso 3: Crear la Aplicación en Fly.io
+## 🚀 Paso 4: Deploy
 
-Desde el directorio raíz del proyecto (`mp3Project/`):
+### Opción A: Deploy desde Leapcell Dashboard
 
-```bash
-flyctl launch
+1. En Leapcell, haz clic en **"Deploy"**
+2. Espera a que el build termine (2-5 minutos)
+3. Verás logs en tiempo real del proceso
+
+### Opción B: Deploy Automático (Push to Deploy)
+
+Cada vez que hagas `git push` a la rama `main`, Leapcell desplegará automáticamente:
+
+```powershell
+# Hacer cambios en el código
+git add .
+git commit -m "Update: descripción de cambios"
+git push
 ```
-
-**Responde a las preguntas:**
-- **App name**: Presiona Enter para usar el nombre del `fly.toml` o elige uno nuevo
-- **Region**: Elige la región más cercana (ej: `mia` para Miami)
-- **Would you like to set up a Postgresql database?**: `No`
-- **Would you like to set up an Upstash Redis database?**: `No`
-- **Would you like to deploy now?**: `No` (lo haremos manualmente)
 
 ---
 
-## ⚙️ Paso 4: Configurar Variables de Entorno (Opcional)
+## ✅ Paso 5: Verificar el Deployment
 
-Si necesitas configurar variables de entorno:
+### 5.1 Ver el Estado
 
-```bash
-flyctl secrets set VARIABLE_NAME=value
-```
+En el dashboard de Leapcell verás:
+- **Status**: Building → Running
+- **URL**: `https://tu-app.leapcell.app`
 
-Por ahora no es necesario.
+### 5.2 Probar la Aplicación
 
----
+1. Haz clic en la URL de tu app
+2. Deberías ver la interfaz del YouTube MP3 Downloader
+3. Prueba descargar un video de YouTube
 
-## 📦 Paso 5: Deploy Inicial
+### 5.3 Ver Logs
 
-```bash
-flyctl deploy
-```
-
-Este comando:
-1. Construye la imagen Docker
-2. Instala FFmpeg y dependencias
-3. Sube la imagen a Fly.io
-4. Despliega la aplicación
-
-**Tiempo estimado**: 2-5 minutos
+En Leapcell dashboard:
+- Ve a la sección **"Logs"**
+- Verás los logs en tiempo real de tu aplicación
 
 ---
 
-## ✅ Paso 6: Verificar el Deployment
+## 🔧 Comandos Git Útiles
 
-### Ver el estado:
-```bash
-flyctl status
+### Subir cambios:
+```powershell
+git add .
+git commit -m "Descripción del cambio"
+git push
 ```
 
-### Ver logs en tiempo real:
-```bash
-flyctl logs
+### Ver estado:
+```powershell
+git status
 ```
 
-### Abrir la aplicación:
-```bash
-flyctl open
+### Ver historial:
+```powershell
+git log --oneline
 ```
 
-Esto abrirá tu aplicación en el navegador: `https://tu-app.fly.dev`
+### Crear rama para testing:
+```powershell
+git checkout -b testing
+git push -u origin testing
+```
 
 ---
 
-## 🔍 Paso 7: Verificar Funcionalidad
+## 🐛 Solución de Problemas
 
-1. **Accede a tu app**: `https://tu-app.fly.dev`
-2. **Prueba con un video de YouTube**
-3. **Verifica que la descarga funcione**
+### Error: "Build Failed"
+**Causa**: Problema con el Dockerfile o dependencias
 
----
+**Solución**:
+1. Revisa los logs de build en Leapcell
+2. Verifica que `requirements.txt` esté correcto
+3. Asegúrate de que el Dockerfile esté en la raíz del repo
 
-## 📊 Comandos Útiles
+### Error: "Application Crashed"
+**Causa**: Error en el código o puerto incorrecto
 
-### Ver información de la app:
-```bash
-flyctl info
+**Solución**:
+1. Revisa los logs de runtime
+2. Verifica que el puerto sea `8080` en el Dockerfile
+3. Asegúrate de que `app.py` no tenga errores
+
+### FFmpeg no funciona
+**Causa**: Dockerfile no instaló FFmpeg correctamente
+
+**Solución**:
+El Dockerfile actual ya incluye FFmpeg. Si hay problemas:
+```dockerfile
+# Verifica que esta línea esté en el Dockerfile
+RUN apt-get update && apt-get install -y ffmpeg
 ```
 
-### Ver logs:
-```bash
-flyctl logs
-```
+### Git push rechazado
+**Causa**: Cambios remotos no sincronizados
 
-### Escalar recursos (si es necesario):
-```bash
-flyctl scale vm shared-cpu-1x --memory 1024
-```
-
-### Reiniciar la app:
-```bash
-flyctl apps restart
-```
-
-### Ver métricas:
-```bash
-flyctl dashboard
-```
-
-### SSH a la máquina:
-```bash
-flyctl ssh console
+**Solución**:
+```powershell
+git pull --rebase
+git push
 ```
 
 ---
 
 ## 🔄 Actualizaciones Futuras
 
-Cuando hagas cambios en el código:
-
-```bash
-# 1. Hacer cambios en el código
-# 2. Desplegar nuevamente
-flyctl deploy
-```
-
----
-
-## 💰 Costos y Límites
-
-### Plan Gratuito (Hobby):
-- **3 máquinas compartidas** (256MB RAM cada una)
-- **160GB de transferencia** por mes
-- **3GB de almacenamiento persistente**
-
-### Tu configuración actual:
-- **1 máquina**: 512MB RAM, 1 CPU compartida
-- **Auto-scaling**: Se apaga cuando no hay tráfico (ahorra recursos)
-- **Costo estimado**: Gratis dentro del plan Hobby
+### Workflow Normal:
+1. Hacer cambios en el código localmente
+2. Probar localmente: `python backend/app.py`
+3. Commit y push:
+   ```powershell
+   git add .
+   git commit -m "Descripción del cambio"
+   git push
+   ```
+4. Leapcell desplegará automáticamente
 
 ---
 
-## 🐛 Solución de Problemas
+## 💰 Plan Gratuito de Leapcell
 
-### Error: "failed to fetch an image"
-```bash
-flyctl deploy --local-only
-```
+### Incluye:
+- **Deployments ilimitados**
+- **HTTPS automático**
+- **Custom domains** (opcional)
+- **Auto-scaling básico**
+- **Logs en tiempo real**
 
-### Error: "health check failed"
-Verifica que el endpoint `/health` esté funcionando:
-```bash
-flyctl logs
-```
-
-### La app no responde:
-```bash
-# Ver estado
-flyctl status
-
-# Reiniciar
-flyctl apps restart
-```
-
-### FFmpeg no funciona:
-El Dockerfile ya incluye FFmpeg. Si hay problemas:
-```bash
-# SSH a la máquina
-flyctl ssh console
-
-# Verificar FFmpeg
-ffmpeg -version
-```
+### Límites:
+- Consulta la documentación de Leapcell para límites actuales
+- Generalmente suficiente para proyectos personales
 
 ---
 
-## 🔒 Seguridad
+## 🌍 Dominio Personalizado (Opcional)
 
-### HTTPS automático:
-Fly.io proporciona certificados SSL automáticos.
-
-### Variables sensibles:
-Usa `flyctl secrets` para variables de entorno sensibles:
-```bash
-flyctl secrets set API_KEY=tu_clave_secreta
-```
+### En Leapcell Dashboard:
+1. Ve a **"Settings"** → **"Domains"**
+2. Agrega tu dominio personalizado
+3. Configura los DNS según las instrucciones
 
 ---
 
-## 📈 Monitoreo
+## 📊 Monitoreo
 
-### Dashboard web:
-```bash
-flyctl dashboard
-```
-
-### Métricas en tiempo real:
-- CPU usage
-- Memory usage
-- Request count
-- Response times
-
----
-
-## 🌍 Dominios Personalizados (Opcional)
-
-### Agregar dominio propio:
-```bash
-flyctl certs add tudominio.com
-```
-
-Luego configura los DNS según las instrucciones.
-
----
-
-## 🎯 Resumen de Comandos Esenciales
-
-```bash
-# Autenticación
-flyctl auth login
-
-# Crear app (primera vez)
-flyctl launch
-
-# Desplegar
-flyctl deploy
-
-# Ver logs
-flyctl logs
-
-# Abrir app
-flyctl open
-
-# Ver estado
-flyctl status
-
-# Dashboard
-flyctl dashboard
-```
+### Dashboard de Leapcell:
+- **Deployments**: Historial de deployments
+- **Logs**: Logs en tiempo real
+- **Metrics**: CPU, memoria, requests
+- **Settings**: Configuración y variables de entorno
 
 ---
 
 ## ✅ Checklist de Deployment
 
-- [ ] Instalar Fly CLI
-- [ ] Autenticarse con `flyctl auth login`
-- [ ] Ejecutar `flyctl launch` desde `mp3Project/`
-- [ ] Configurar región
-- [ ] Ejecutar `flyctl deploy`
-- [ ] Verificar logs con `flyctl logs`
-- [ ] Abrir app con `flyctl open`
+- [ ] Crear repositorio en GitHub
+- [ ] Subir código a GitHub
+- [ ] Crear cuenta en Leapcell
+- [ ] Conectar GitHub con Leapcell
+- [ ] Importar repositorio
+- [ ] Configurar como proyecto Docker
+- [ ] Hacer deploy
+- [ ] Verificar que la app funcione
 - [ ] Probar descarga de YouTube
-- [ ] Verificar que FFmpeg funciona
+- [ ] Verificar que FFmpeg funcione
 
 ---
 
-## 📚 Recursos Adicionales
+## 🎯 Resumen de Comandos
 
-- [Documentación de Fly.io](https://fly.io/docs/)
-- [Fly.io Pricing](https://fly.io/docs/about/pricing/)
-- [Fly.io Status](https://status.flyio.net/)
+### Setup Inicial:
+```powershell
+# Inicializar Git
+git init
+git add .
+git commit -m "Initial commit"
+
+# Conectar con GitHub
+git remote add origin https://github.com/tu-usuario/youtube-mp3-downloader.git
+git branch -M main
+git push -u origin main
+```
+
+### Actualizaciones:
+```powershell
+git add .
+git commit -m "Update: descripción"
+git push
+```
+
+---
+
+## 📚 Recursos
+
+- [Leapcell Documentation](https://docs.leapcell.io)
+- [GitHub Docs](https://docs.github.com)
+- [Git Cheat Sheet](https://education.github.com/git-cheat-sheet-education.pdf)
 
 ---
 
 ## 🎉 ¡Listo!
 
-Tu aplicación YouTube to MP3 ahora está desplegada en Fly.io con:
-- ✅ FFmpeg instalado
+Tu aplicación YouTube to MP3 estará desplegada en Leapcell con:
+- ✅ FFmpeg instalado (vía Docker)
 - ✅ HTTPS automático
-- ✅ Auto-scaling
-- ✅ Health checks
-- ✅ Logs en tiempo real
+- ✅ Deploy automático con git push
+- ✅ Sin tarjeta de crédito requerida
+- ✅ Plan gratuito
