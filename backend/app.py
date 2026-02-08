@@ -44,6 +44,10 @@ def get_cookie_file():
     """Descarga cookies desde URL externa y las guarda en archivo temporal"""
     global _cookies_cache, _cookies_last_update
     
+    print(f"{Fore.CYAN}🔍 get_cookie_file() llamada")
+    print(f"{Fore.CYAN}🔍 YOUTUBE_COOKIES_URL = '{YOUTUBE_COOKIES_URL}'")
+    print(f"{Fore.CYAN}🔍 Longitud URL: {len(YOUTUBE_COOKIES_URL) if YOUTUBE_COOKIES_URL else 0}")
+    
     if not YOUTUBE_COOKIES_URL:
         print(f"{Fore.YELLOW}⚠️  No hay URL de cookies configurada")
         return None
