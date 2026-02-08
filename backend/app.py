@@ -30,8 +30,24 @@ app.secret_key = os.getenv('SECRET_KEY', os.urandom(24))
 # Configuración de admin
 ADMIN_PASSWORD_HASH = os.getenv('ADMIN_PASSWORD_HASH', '')
 
-# Ruta del archivo de cookies
-COOKIE_FILE = Path(__file__).parent / 'youtube_cookies.txt'
+# Cookie storage - usar variable de entorno en lugar de archivo
+# Esto es necesario porque Leapcell tiene un sistema de archivos de solo lectura
+YOUTUBE_COOKIES = os.getenv('YOUTUBE_COOKIES', '')
+
+# Crear archivo temporal de cookies si existe la variable de entorno
+def get_cookie_file():
+    """Crea un archivo temporal de cookies desde la variable de entorno"""
+    if not YOUTUBE_COOKIES:
+        return None
+    
+    try:
+        # Crear archivo temporal
+        temp_cookie_file = Path(tempfile.gettempdir()) / 'youtube_cookies.txt'
+        temp_cookie_file.write_text(YOUTUBE_COOKIES)
+        return str(temp_cookie_file)
+    except Exception as e:
+        print(f"{Fore.RED}⚠️  Error al crear archivo temporal de cookies: {e}")
+        return None
 
 class YouTubeMP3Downloader:
     def __init__(self):
@@ -87,8 +103,8 @@ class YouTubeMP3Downloader:
             'quiet': True,
             'no_warnings': True,
             'extract_flat': False,
-            # Usar cookies si existen
-            'cookiefile': str(COOKIE_FILE) if COOKIE_FILE.exists() else None,
+            # Usar cookies desde variable de entorno
+            'cookiefile': get_cookie_file(),
             # Opciones mejoradas para evitar errores 403 y bot detection
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'extractor_args': {
@@ -114,7 +130,7 @@ class YouTubeMP3Downloader:
         }
         
         # Log si se están usando cookies
-        if COOKIE_FILE.exists():
+        if YOUTUBE_COOKIES:
             print(f"{Fore.GREEN}🍪 Usando cookies de YouTube")
         
         try:
@@ -297,19 +313,26 @@ def upload_cookies():
         if not file.filename.endswith('.txt'):
             return jsonify({'success': False, 'error': 'El archivo debe ser .txt'}), 400
         
-        # Guardar el archivo de cookies
-        file.save(COOKIE_FILE)
+        # Leer el contenido del archivo
+        cookie_content = file.read().decode('utf-8')
         
-        print(f"{Fore.GREEN}✅ Cookies actualizadas exitosamente")
+        print(f"{Fore.GREEN}✅ Cookies recibidas ({len(cookie_content)} caracteres)")
         
+        # En Leapcell, necesitas agregar esto como variable de entorno
         return jsonify({
             'success': True, 
-            'message': 'Cookies subidas exitosamente',
-            'uploaded_at': datetime.now().isoformat()
+            'message': 'Cookies procesadas. IMPORTANTE: Copia el contenido de abajo y agrégalo como variable de entorno YOUTUBE_COOKIES en Leapcell',
+            'cookie_content': cookie_content,
+            'instructions': [
+                '1. Copia todo el contenido de cookie_content',
+                '2. Ve a Leapcell Dashboard → Settings → Environment Variables',
+                '3. Agrega: YOUTUBE_COOKIES = <contenido copiado>',
+                '4. Guarda y Redeploy'
+            ]
         })
         
     except Exception as e:
-        print(f"{Fore.RED}❌ Error al subir cookies: {e}")
+        print(f"{Fore.RED}❌ Error al procesar cookies: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -320,18 +343,19 @@ def cookie_status():
         return jsonify({'success': False, 'error': 'No autenticado'}), 401
     
     try:
-        if COOKIE_FILE.exists():
-            stat = COOKIE_FILE.stat()
+        if YOUTUBE_COOKIES:
             return jsonify({
                 'success': True,
                 'exists': True,
-                'uploaded_at': datetime.fromtimestamp(stat.st_mtime).isoformat(),
-                'size_bytes': stat.st_size
+                'source': 'environment_variable',
+                'size_bytes': len(YOUTUBE_COOKIES),
+                'message': 'Cookies configuradas en variable de entorno'
             })
         else:
             return jsonify({
                 'success': True,
-                'exists': False
+                'exists': False,
+                'message': 'No hay cookies configuradas. Agrega YOUTUBE_COOKIES como variable de entorno en Leapcell'
             })
             
     except Exception as e:
@@ -344,17 +368,10 @@ def delete_cookies():
     if not require_admin():
         return jsonify({'success': False, 'error': 'No autenticado'}), 401
     
-    try:
-        if COOKIE_FILE.exists():
-            COOKIE_FILE.unlink()
-            print(f"{Fore.YELLOW}🗑️  Cookies eliminadas")
-            return jsonify({'success': True, 'message': 'Cookies eliminadas exitosamente'})
-        else:
-            return jsonify({'success': False, 'error': 'No hay cookies para eliminar'}), 404
-            
-    except Exception as e:
-        print(f"{Fore.RED}❌ Error al eliminar cookies: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+    return jsonify({
+        'success': False, 
+        'error': 'Las cookies están en una variable de entorno. Para eliminarlas, ve a Leapcell Dashboard → Settings → Environment Variables y elimina YOUTUBE_COOKIES'
+    }), 400
 
 
 def main():
