@@ -1,0 +1,17 @@
+name: youtube-mp3-downloader
+type: web
+
+build:
+  dockerfile: Dockerfile
+  context: .
+
+deploy:
+  port: 8080
+  healthcheck:
+    path: /health
+    interval: 30s
+    timeout: 10s
+    retries: 3
+
+env:
+  PORT: "8080"
