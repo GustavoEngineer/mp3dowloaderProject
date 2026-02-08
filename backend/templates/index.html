@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube to MP3 Downloader</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="background-gradient"></div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="icon-wrapper">
+                <svg class="music-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+            </div>
+            <h1>YouTube to MP3</h1>
+            <p class="subtitle">Descarga tu música favorita en segundos</p>
+        </div>
+
+        <div class="card">
+            <form id="downloadForm">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="youtubeUrl" 
+                        placeholder="Pega aquí el link de YouTube..."
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="submit" id="downloadBtn" class="btn-primary">
+                        <span class="btn-text">Descargar MP3</span>
+                        <span class="btn-loader" style="display: none;">
+                            <svg class="spinner" viewBox="0 0 50 50">
+                                <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            </form>
+
+            <div id="message" class="message" style="display: none;"></div>
+            
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <p class="progress-text">Descargando y convirtiendo...</p>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h3>Rápido</h3>
+                <p>Descarga en segundos</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎵</div>
+                <h3>Alta Calidad</h3>
+                <p>MP3 a 192 kbps</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <h3>Seguro</h3>
+                <p>Sin registro requerido</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Respeta los derechos de autor • Solo para uso personal</p>
+        </footer>
+    </div>
+
+    <script>
+        const form = document.getElementById('downloadForm');
+        const urlInput = document.getElementById('youtubeUrl');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const btnText = document.querySelector('.btn-text');
+        const btnLoader = document.querySelector('.btn-loader');
+        const messageDiv = document.getElementById('message');
+        const progressContainer = document.getElementById('progressContainer');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                showMessage('Por favor ingresa una URL de YouTube', 'error');
+                return;
+            }
+
+            // Validar formato de URL de YouTube
+            const youtubeRegex = /(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\/(watch\?v=|embed\/|v\/|.+\?v=)?([^&=%\?]{11})/;
+            if (!youtubeRegex.test(url)) {
+                showMessage('Por favor ingresa una URL válida de YouTube', 'error');
+                return;
+            }
+
+            // Mostrar estado de carga
+            setLoading(true);
+            hideMessage();
+            showProgress();
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error al descargar el video');
+                }
+
+                // Obtener el blob del archivo
+                const blob = await response.blob();
+                
+                // Obtener el nombre del archivo desde los headers
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'audio.mp3';
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+                    if (filenameMatch) {
+                        filename = filenameMatch[1];
+                    }
+                }
+
+                // Crear un enlace temporal para descargar el archivo
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(downloadUrl);
+                document.body.removeChild(a);
+
+                // Mostrar mensaje de éxito
+                showMessage('✅ ¡Descarga completada! Revisa tu carpeta de descargas', 'success');
+                urlInput.value = '';
+
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage(`❌ ${error.message}`, 'error');
+            } finally {
+                setLoading(false);
+                hideProgress();
+            }
+        });
+
+        function setLoading(loading) {
+            if (loading) {
+                downloadBtn.disabled = true;
+                btnText.style.display = 'none';
+                btnLoader.style.display = 'inline-block';
+                downloadBtn.classList.add('loading');
+            } else {
+                downloadBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnLoader.style.display = 'none';
+                downloadBtn.classList.remove('loading');
+            }
+        }
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            // Auto-ocultar después de 5 segundos si es éxito
+            if (type === 'success') {
+                setTimeout(() => {
+                    hideMessage();
+                }, 5000);
+            }
+        }
+
+        function hideMessage() {
+            messageDiv.style.display = 'none';
+        }
+
+        function showProgress() {
+            progressContainer.style.display = 'block';
+        }
+
+        function hideProgress() {
+            progressContainer.style.display = 'none';
+        }
+
+        // Limpiar mensaje cuando el usuario empieza a escribir
+        urlInput.addEventListener('input', () => {
+            hideMessage();
+        });
+    </script>
+</body>
+</html>
