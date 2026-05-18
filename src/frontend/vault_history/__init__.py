@@ -1,0 +1,1 @@
+from src.frontend.vault_history.vault_history_widget import VaultHistoryWidget

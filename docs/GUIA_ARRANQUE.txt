@@ -1,0 +1,18 @@
+GUÍA DE ARRANQUE - MP3 DOWNLOADER
+
+1. Prepara tu entorno virtual
+# Abrir terminal en la carpeta del proyecto.
+# Comando para crear el entorno virtual:
+python -m venv venv
+
+2. Activa tu entorno virtual
+# En Windows ejecuta este comando de activación:
+.\venv\Scripts\activate
+
+3. Instala las dependencias necesarias
+# Instalar módulos usando el archivo de requerimientos:
+pip install -r requirements.txt
+
+4. Inicia la aplicación
+# Arrancar aplicación desde el archivo principal:
+python src/main.py

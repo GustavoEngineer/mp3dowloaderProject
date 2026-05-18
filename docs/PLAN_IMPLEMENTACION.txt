@@ -1,0 +1,480 @@
+========================================================
+APP MUSIC VAULT TERMINAL
+MODULOS, REQUISITOS FUNCIONALES Y COMANDOS
+========================================================
+
+
+========================================================
+1. MODULOS PRINCIPALES
+========================================================
+
+1. UI SHELL
+Responsabilidad:
+- Renderizar toda la interfaz principal.
+- Organizar visualmente todas las secciones de la aplicación.
+- Mantener diseño minimalista estilo terminal.
+
+Incluye:
+- Barra superior
+- Input de comandos
+- Área de logs
+- Área de visualización (Vault e History)
+
+
+--------------------------------------------------------
+
+2. COMMAND ENGINE
+Responsabilidad:
+- Interpretar comandos escritos por el usuario.
+- Diferenciar entre comandos y URLs.
+- Ejecutar acciones internas.
+
+Funciones:
+- Validar sintaxis
+- Detectar prefijo "cmd"
+- Ejecutar acciones según comando
+
+
+--------------------------------------------------------
+
+3. DOWNLOAD MANAGER
+Responsabilidad:
+- Descargar canciones desde URLs válidas.
+- Convertir audio a formato MP3.
+- Guardar canciones dentro de la librería.
+
+Funciones:
+- Validación URL
+- Descarga audio
+- Conversión MP3
+- Guardado de archivos
+
+
+--------------------------------------------------------
+
+4. MUSIC LIBRARY MANAGER
+Responsabilidad:
+- Gestionar albums y canciones.
+- Crear estructura de carpetas.
+- Navegar entre albums.
+
+Funciones:
+- Crear albums
+- Renombrar albums
+- Visualizar canciones
+- Organización de librería
+
+
+--------------------------------------------------------
+
+5. METADATA EDITOR
+Responsabilidad:
+- Modificar información de archivos MP3.
+
+Funciones:
+- Editar nombre canción
+- Editar artista
+- Editar album
+- Guardar cambios metadata
+
+
+--------------------------------------------------------
+
+6. HISTORY SYSTEM
+Responsabilidad:
+- Registrar historial de descargas.
+- Mantener orden cronológico.
+
+Funciones:
+- Guardar fecha descarga
+- Guardar nombre canción
+- Mostrar historial reciente
+
+
+--------------------------------------------------------
+
+7. CONNECTIVITY SYSTEM
+Responsabilidad:
+- Detectar conexión a internet.
+- Mostrar estado conexión.
+- Mostrar nombre red wifi.
+
+Funciones:
+- Estado online/offline
+- Detectar wifi actual
+- Abrir configuración wifi Windows
+
+
+========================================================
+2. REQUISITOS FUNCIONALES
+========================================================
+
+
+========================================================
+2.1 BARRA SUPERIOR
+========================================================
+
+RF-001
+En la esquina izquierda del sistema debe mostrarse el estado de conexión a internet. 
+
+RF-002
+El sistema debe mostrar:
+- SYSTEM_ONLINE en color azul
+- SYSTEM_OFFLINE en color rojo
+
+RF-003
+En la esquina derecha del sistema debe mostrar el nombre de la red wifi actual.
+
+RF-004
+Si no existe conexión debe mostrarse:
+- No hay conexión a internet
+
+RF-005
+El sistema debe mostrar la fecha actual.
+
+Formato:
+- Mes Día, Año
+Ejemplo:
+- May 16, 2026
+
+RF-006
+El sistema debe permitir abrir configuración wifi de Windows mediante comando.
+
+
+========================================================
+2.2 INPUT DE COMANDOS
+========================================================
+
+RF-007
+El input debe contener un icono de terminal en la izquierda de color azul. Ademàs debe de contener un borde de color azul.
+
+RF-008
+El sistema debe mostrar un placeholder descriptivo.
+
+RF-009
+Todo texto que inicie con "cmd" debe interpretarse como comando. Si solo se escribe "cmd" debe mostrar un mensaje de ayuda.
+
+RF-010
+Todo texto que NO inicie con "cmd" debe interpretarse como URL.
+
+RF-011
+El sistema debe validar si la URL es válida o inválida.
+
+RF-012
+El sistema debe limpiar automáticamente el input después de ejecutar acción.
+
+
+========================================================
+2.3 AREA DE LOGS
+========================================================
+
+RF-013
+El sistema debe registrar todas las acciones realizadas. Debe estar debajo del area del input. y debe ocupar el 70% del ancho de la aplicacion.
+
+RF-014
+Cada log debe contener:
+- Hora
+- Ruta actual
+- Tipo de log
+- Resultado acción
+
+RF-015
+Cada log debe estar separado visualmente mediante una línea.
+
+RF-016
+Tipos de logs permitidos:
+- INFO
+- SUCCESS
+- WARN
+- FAILED
+
+RF-017
+Colores de logs:
+- INFO = Gris
+- SUCCESS = Verde
+- WARN = Amarillo
+- FAILED = Rojo
+
+RF-018
+El área de logs debe mantener scroll automático hacia abajo.
+
+RF-019
+El comando clear debe limpiar todos los logs.
+
+
+========================================================
+2.4 AREA DE VISUALIZACIÓN - VAULT
+========================================================
+
+RF-020
+El sistema debe mostrar estructura tipo árbol de carpetas.
+
+RF-021
+Cada album debe mostrar cantidad total de canciones.
+
+RF-022
+El sistema debe contener una carpeta raíz llamada:
+- Sin album
+
+RF-023
+El sistema debe actualizar automáticamente el árbol visual.
+
+RF-024
+El sistema debe abrir visualmente el album seleccionado.
+
+RF-025
+El sistema debe mostrar canciones pertenecientes al album activo.
+
+RF-026
+La navegación debe actualizar la ruta actual del sistema.
+
+
+========================================================
+2.5 AREA DE VISUALIZACIÓN - HISTORY
+========================================================
+
+RF-027
+El sistema debe guardar historial de canciones descargadas.
+
+RF-028
+El historial debe ordenarse desde la descarga más reciente a la más antigua.
+
+RF-029
+Cada elemento del historial debe contener:
+- Nombre canción
+- Fecha descarga
+- Hora descarga
+- Estado descarga
+
+
+========================================================
+2.6 DESCARGA DE CANCIONES
+========================================================
+
+RF-030
+El sistema debe aceptar URLs válidas para descarga.
+
+RF-031
+El sistema debe descargar únicamente el audio.
+
+RF-032
+El sistema debe convertir automáticamente el audio a MP3.
+
+RF-033
+Antes de guardar una canción debe solicitar:
+- Album
+- Nombre canción
+- Artista
+- Album metadata
+
+RF-034
+Si no se asigna album la canción debe almacenarse en:
+- Sin album
+
+RF-035
+Después de descargar una canción debe actualizarse:
+- Vault
+- Historial
+- Logs
+
+
+========================================================
+2.7 NAVEGACIÓN
+========================================================
+
+RF-036
+El sistema debe permitir navegar entre albums. con el comando "cmd nav" y terminación "--album <nombre del album>" o "cmd nav" y terminación "--sin-album"
+- Sin importar la ubicacion actual con solo poner el nombre del album o "sinalbum" en el campo de texto se debe navegar al album correspondiente.
+- Si se quiere ir a la carpeta raiz, se debe poner "cmd nav" y terminación "--raiz".
+
+RF-037
+El sistema debe mantener un contexto de carpeta actual. 
+
+RF-038
+La ruta actual debe mostrarse en los logs.
+
+RF-039
+Al navegar a un album debe abrirse automáticamente su contenido visual.
+
+
+========================================================
+2.8 EDICIÓN
+========================================================
+
+RF-040
+El sistema debe permitir editar albums.
+
+RF-041
+El sistema debe permitir editar canciones.
+
+RF-042
+El sistema debe detectar automáticamente el album actual.
+
+RF-043
+El sistema debe permitir modificar:
+- Nombre canción
+- Artista
+- Album
+
+RF-044
+El sistema debe guardar cambios directamente en metadata MP3.
+
+
+========================================================
+3. LISTA TOTAL DE COMANDOS
+========================================================
+
+
+========================================================
+3.1 SISTEMA
+========================================================
+
+clear
+Descripción:
+- Limpia logs de consola.
+
+--------------------------------------------------------
+
+exit
+Descripción:
+- Cierra aplicación.
+
+--------------------------------------------------------
+
+wifi
+Descripción:
+- Abre configuración wifi Windows.
+
+
+========================================================
+3.2 ALBUMS
+========================================================
+
+create --album <nombre>
+Descripción:
+- Crear nuevo album.
+
+--------------------------------------------------------
+
+nav --album <nombre>
+Descripción:
+- Navegar hacia album específico.
+
+--------------------------------------------------------
+
+edit --album-name <nuevo nombre>
+Descripción:
+- Renombrar album actual (debe navegar primero al álbum).
+
+
+================================================================
+3.3 CANCIONES
+================================================================
+
+edit --song-name <numerocancion> <nuevonombrecancion>
+edit --song-album <numerocancion> <nuevoalbumcancion>
+edit --song-artist <numerocancion> <nuevoartistacancion>
+
+Descripción:
+- Editar metadata canción seleccionada (debe navegar primero al álbum).
+
+--------------------------------------------------------
+
+export --song <numero> (si se ponen varios numeros separados por comas se exportan todas las canciones correspondientes a esos numeros)
+export --song-all
+
+Descripción:
+- se abrirá el explorador y podras elegir la carpeta para guardar la canción (solo lo copia y pega a la carpeta elegida) se puede exportar las veces que quieras
+- Las canciones exportadas pueden ser borradas por el usuario
+- Las canciones exportadas saldrán de un color gris indicando que ya fueron exportadas
+- Para exportar canciones se debe de navegar primero al album que contiene la o las canciones a exportar.
+
+----------------------------------------------------------------
+
+rm --song <numero> (si se ponen varios numeros separados por comas se borran todas las canciones correspondientes a esos numeros)
+rm --song-all
+Descripción:
+- Eliminar canción o canciones del álbum actual (debe navegar primero al álbum).
+
+
+================================================================
+3.4 ALBUMS AVANZADO
+================================================================
+
+rm --album
+Descripción:
+- Eliminar álbum actual (debe navegar primero al álbum).
+
+----------------------------------------------------------------
+
+back
+Descripción:
+- Volver a la carpeta o nivel anterior (del álbum actual de vuelta al directorio raíz).
+
+========================================================
+3.6 URLS
+========================================================
+
+https://youtube.com/...
+
+Descripción:
+- Si el texto no inicia con "cmd" se interpreta automáticamente como URL para descarga.
+
+
+========================================================
+4. FLUJO GENERAL DEL SISTEMA
+========================================================
+
+1. Usuario escribe comando o URL.
+2. Sistema detecta si es:
+   - comando
+   - URL
+
+3. Si es comando:
+   - se ejecuta acción correspondiente.
+
+4. Si es URL:
+   - validar URL
+   - descargar audio
+   - solicitar metadata
+   - solicitar album
+   - guardar canción
+   - actualizar vault
+   - actualizar historial
+   - registrar logs
+
+
+========================================================
+5. ESTRUCTURA VISUAL GENERAL
+========================================================
+
+TOPBAR
+- Estado conexión
+- Wifi actual
+- Fecha
+
+--------------------------------------------------------
+
+INPUT
+- Entrada comandos/URL
+
+--------------------------------------------------------
+
+LOGS
+- Eventos sistema
+
+--------------------------------------------------------
+
+VAULT
+- Albums
+- Canciones
+
+--------------------------------------------------------
+
+HISTORY
+- Historial descargas
+
+
+========================================================
+FIN DOCUMENTO
+========================================================
